@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="NIK Parse — Parse & Validasi Nomor Induk Kependudukan (KTP) Indonesia. API publik + UI futuristik." />
+  <meta name="theme-color" content="#0a0a12" />
+  <title>NIK Parse • Official</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #05050a;
+      --bg-card: rgba(12, 14, 28, 0.72);
+      --border: rgba(0, 245, 255, 0.18);
+      --neon-cyan: #00f5ff;
+      --neon-pink: #ff00e5;
+      --neon-purple: #b026ff;
+      --neon-green: #39ff14;
+      --text: #e8f0ff;
+      --text-dim: #8a9bb8;
+      --glow-cyan: 0 0 20px rgba(0, 245, 255, 0.45), 0 0 40px rgba(0, 245, 255, 0.15);
+      --glow-pink: 0 0 20px rgba(255, 0, 229, 0.4);
+      --radius: 16px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', system-ui, sans-serif;
+      overflow-x: hidden;
+    }
+
+    /* Animated background */
+    .bg-grid {
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(0, 245, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 245, 255, 0.03) 1px, transparent 1px);
+      background-size: 48px 48px;
+      mask-image: radial-gradient(ellipse at center, black 20%, transparent 75%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .bg-orbs {
+      position: fixed;
+      inset: 0;
+      overflow: hidden;
+      z-index: 0;
+      pointer-events: none;
+    }
+    .orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: 0.35;
+      animation: float 18s ease-in-out infinite;
+    }
+    .orb-1 {
+      width: 420px; height: 420px;
+      background: radial-gradient(circle, var(--neon-cyan), transparent 70%);
+      top: -10%; left: -8%;
+      animation-delay: 0s;
+    }
+    .orb-2 {
+      width: 380px; height: 380px;
+      background: radial-gradient(circle, var(--neon-pink), transparent 70%);
+      bottom: -15%; right: -10%;
+      animation-delay: -6s;
+    }
+    .orb-3 {
+      width: 300px; height: 300px;
+      background: radial-gradient(circle, var(--neon-purple), transparent 70%);
+      top: 40%; left: 55%;
+      animation-delay: -12s;
+    }
+    @keyframes float {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      33% { transform: translate(30px, -40px) scale(1.08); }
+      66% { transform: translate(-20px, 25px) scale(0.95); }
+    }
+
+    /* Particles canvas */
+    #particles {
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    /* Layout */
+    .container {
+      position: relative;
+      z-index: 2;
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 2.5rem 1.25rem 4rem;
+    }
+
+    /* Header */
+    header {
+      text-align: center;
+      margin-bottom: 2.75rem;
+      animation: fadeUp 0.8s ease-out;
+    }
+    .logo {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 0.75rem;
+    }
+    .logo-icon {
+      width: 52px; height: 52px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, var(--neon-cyan), var(--neon-purple));
+      display: grid;
+      place-items: center;
+      box-shadow: var(--glow-cyan);
+      font-size: 1.6rem;
+    }
+    h1 {
+      font-family: 'Orbitron', sans-serif;
+      font-weight: 800;
+      font-size: clamp(1.8rem, 5vw, 2.6rem);
+      letter-spacing: 0.04em;
+      background: linear-gradient(90deg, var(--neon-cyan), var(--neon-pink), var(--neon-purple));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      text-shadow: 0 0 40px rgba(0, 245, 255, 0.3);
+    }
+    .tagline {
+      color: var(--text-dim);
+      font-size: 0.95rem;
+      margin-top: 0.4rem;
+      letter-spacing: 0.02em;
+    }
+    .badge {
+      display: inline-block;
+      margin-top: 1rem;
+      padding: 0.3rem 0.85rem;
+      border-radius: 999px;
+      font-size: 0.7rem;
+      font-family: 'JetBrains Mono', monospace;
+      letter-spacing: 0.08em;
+      border: 1px solid var(--border);
+      background: rgba(0, 245, 255, 0.06);
+      color: var(--neon-cyan);
+    }
+
+    /* Card */
+    .card {
+      background: var(--bg-card);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.75rem;
+      box-shadow:
+        0 0 0 1px rgba(0, 245, 255, 0.05),
+        0 20px 50px rgba(0, 0, 0, 0.45),
+        inset 0 1px 0 rgba(255, 255, 255, 0.04);
+      animation: fadeUp 0.9s ease-out 0.1s both;
+    }
+
+    .input-group {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+    .input-wrap {
+      flex: 1;
+      min-width: 220px;
+      position: relative;
+    }
+    .input-wrap label {
+      display: block;
+      font-size: 0.7rem;
+      font-family: 'JetBrains Mono', monospace;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      margin-bottom: 0.45rem;
+    }
+    input[type="text"] {
+      width: 100%;
+      padding: 0.95rem 1.1rem;
+      border-radius: 12px;
+      border: 1px solid rgba(0, 245, 255, 0.22);
+      background: rgba(0, 0, 0, 0.35);
+      color: var(--text);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.05rem;
+      letter-spacing: 0.08em;
+      outline: none;
+      transition: border-color 0.25s, box-shadow 0.25s;
+    }
+    input[type="text"]:focus {
+      border-color: var(--neon-cyan);
+      box-shadow: 0 0 0 3px rgba(0, 245, 255, 0.15), var(--glow-cyan);
+    }
+    input[type="text"]::placeholder {
+      color: #4a5a78;
+      letter-spacing: 0.04em;
+    }
+
+    .btn {
+      align-self: flex-end;
+      padding: 0.95rem 1.6rem;
+      border: none;
+      border-radius: 12px;
+      font-family: 'Orbitron', sans-serif;
+      font-weight: 600;
+      font-size: 0.85rem;
+      letter-spacing: 0.1em;
+      cursor: pointer;
+      background: linear-gradient(135deg, var(--neon-cyan), #00b8c4);
+      color: #031018;
+      box-shadow: var(--glow-cyan);
+      transition: transform 0.2s, box-shadow 0.2s, filter 0.2s;
+      white-space: nowrap;
+    }
+    .btn:hover {
+      transform: translateY(-2px);
+      filter: brightness(1.1);
+      box-shadow: 0 0 28px rgba(0, 245, 255, 0.55);
+    }
+    .btn:active { transform: translateY(0); }
+    .btn:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+      transform: none;
+    }
+    .btn-secondary {
+      background: transparent;
+      color: var(--neon-cyan);
+      border: 1px solid rgba(0, 245, 255, 0.35);
+      box-shadow: none;
+      margin-left: 0.5rem;
+    }
+    .btn-secondary:hover {
+      background: rgba(0, 245, 255, 0.08);
+      box-shadow: var(--glow-cyan);
+    }
+
+    /* Result area */
+    #result {
+      margin-top: 1.5rem;
+      display: none;
+    }
+    #result.visible { display: block; animation: fadeUp 0.45s ease-out; }
+
+    .status-bar {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      margin-bottom: 1.25rem;
+      padding: 0.65rem 1rem;
+      border-radius: 10px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+    }
+    .status-bar.success {
+      background: rgba(57, 255, 20, 0.08);
+      border: 1px solid rgba(57, 255, 20, 0.3);
+      color: var(--neon-green);
+    }
+    .status-bar.error {
+      background: rgba(255, 50, 80, 0.1);
+      border: 1px solid rgba(255, 50, 80, 0.35);
+      color: #ff6b8a;
+    }
+    .status-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: currentColor;
+      box-shadow: 0 0 8px currentColor;
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 0.85rem;
+    }
+    .field {
+      background: rgba(0, 0, 0, 0.28);
+      border: 1px solid rgba(0, 245, 255, 0.12);
+      border-radius: 12px;
+      padding: 0.9rem 1rem;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+    .field:hover {
+      border-color: rgba(0, 245, 255, 0.35);
+      transform: translateY(-2px);
+    }
+    .field .label {
+      font-size: 0.65rem;
+      font-family: 'JetBrains Mono', monospace;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      margin-bottom: 0.35rem;
+    }
+    .field .value {
+      font-size: 0.95rem;
+      font-weight: 500;
+      word-break: break-word;
+      color: var(--text);
+    }
+    .field.highlight .value {
+      color: var(--neon-cyan);
+      text-shadow: 0 0 12px rgba(0, 245, 255, 0.4);
+    }
+
+    /* API section */
+    .api-section {
+      margin-top: 2.5rem;
+      animation: fadeUp 1s ease-out 0.2s both;
+    }
+    .api-section h2 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.1rem;
+      letter-spacing: 0.06em;
+      margin-bottom: 1rem;
+      color: var(--neon-cyan);
+    }
+    .code-block {
+      background: rgba(0, 0, 0, 0.45);
+      border: 1px solid rgba(0, 245, 255, 0.15);
+      border-radius: 12px;
+      padding: 1.1rem 1.25rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.78rem;
+      line-height: 1.65;
+      overflow-x: auto;
+      color: #a8c0e0;
+      position: relative;
+    }
+    .code-block .cmd { color: var(--neon-green); }
+    .code-block .url { color: var(--neon-cyan); }
+    .code-block .key { color: var(--neon-pink); }
+    .copy-btn {
+      position: absolute;
+      top: 0.6rem;
+      right: 0.6rem;
+      padding: 0.3rem 0.6rem;
+      font-size: 0.65rem;
+      border-radius: 6px;
+      border: 1px solid rgba(0, 245, 255, 0.25);
+      background: rgba(0, 245, 255, 0.08);
+      color: var(--neon-cyan);
+      cursor: pointer;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .copy-btn:hover { background: rgba(0, 245, 255, 0.18); }
+
+    .endpoints {
+      display: grid;
+      gap: 0.75rem;
+      margin-top: 1rem;
+    }
+    .endpoint {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.75rem 1rem;
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 10px;
+      border: 1px solid rgba(0, 245, 255, 0.1);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+    }
+    .method {
+      padding: 0.2rem 0.5rem;
+      border-radius: 5px;
+      font-size: 0.65rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+    }
+    .method.get { background: rgba(0, 245, 255, 0.15); color: var(--neon-cyan); }
+    .method.post { background: rgba(255, 0, 229, 0.15); color: var(--neon-pink); }
+
+    /* Footer */
+    footer {
+      text-align: center;
+      margin-top: 3rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid rgba(0, 245, 255, 0.1);
+      color: var(--text-dim);
+      font-size: 0.8rem;
+      animation: fadeUp 1.1s ease-out 0.3s both;
+    }
+    footer a {
+      color: var(--neon-cyan);
+      text-decoration: none;
+    }
+    footer a:hover { text-decoration: underline; }
+
+    /* Loader */
+    .loader {
+      display: inline-block;
+      width: 18px; height: 18px;
+      border: 2px solid rgba(0, 245, 255, 0.25);
+      border-top-color: var(--neon-cyan);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      vertical-align: middle;
+      margin-right: 0.5rem;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(18px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Responsive */
+    @media (max-width: 560px) {
+      .input-group { flex-direction: column; }
+      .btn { width: 100%; }
+      .btn-secondary { margin-left: 0; margin-top: 0.5rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-grid"></div>
+  <div class="bg-orbs">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+  </div>
+  <canvas id="particles"></canvas>
+
+  <div class="container">
+    <header>
+      <div class="logo">
+        <div class="logo-icon">🆔</div>
+        <h1>NIK PARSE</h1>
+      </div>
+      <p class="tagline">Parse & Validasi Nomor Induk Kependudukan (KTP) Indonesia</p>
+      <span class="badge">v2.0 • PUBLIC API • VERCEL READY</span>
+    </header>
+
+    <div class="card">
+      <div class="input-group">
+        <div class="input-wrap">
+          <label for="nik">Nomor NIK (16 digit)</label>
+          <input type="text" id="nik" maxlength="16" placeholder="3204110609970001" autocomplete="off" inputmode="numeric" />
+        </div>
+        <button class="btn" id="btnParse" onclick="doParse()">
+          PARSE
+        </button>
+        <button class="btn btn-secondary" onclick="fillExample()">CONTOH</button>
+      </div>
+
+      <div id="result"></div>
+    </div>
+
+    <section class="api-section">
+      <h2>// API ENDPOINT</h2>
+      <div class="endpoints">
+        <div class="endpoint">
+          <span class="method get">GET</span>
+          <span>/api/parse?nik=<span style="color:var(--neon-pink)">16DIGITNIK</span></span>
+        </div>
+        <div class="endpoint">
+          <span class="method post">POST</span>
+          <span>/api/parse &nbsp;•&nbsp; body: { "nik": "16DIGITNIK" }</span>
+        </div>
+      </div>
+
+      <div style="margin-top:1.25rem">
+        <div class="code-block" id="curlCode">
+          <button class="copy-btn" onclick="copyCurl()">COPY</button>
+          <span class="cmd">curl</span> -s <span class="url">"https://YOUR-DOMAIN.vercel.app/api/parse?nik=3204110609970001"</span> | jq
+        </div>
+      </div>
+
+      <div style="margin-top:1rem; font-size:0.8rem; color:var(--text-dim); line-height:1.6">
+        Response JSON berisi: <code style="color:var(--neon-cyan)">status</code>, <code style="color:var(--neon-cyan)">pesan</code>,
+        <code style="color:var(--neon-cyan)">data</code> (kelamin, lahir, provinsi, kab/kota, kecamatan, kodepos, usia, zodiak, pasaran, dll).
+      </div>
+    </section>
+
+    <footer>
+      Built with ⚡ for Vercel &nbsp;•&nbsp; Parser original by
+      <a href="https://github.com/bachors/nik_parse.js" target="_blank" rel="noopener">@bachors</a>
+      &nbsp;•&nbsp; Redesigned 2025
+    </footer>
+  </div>
+
+  <script>
+    // ===== Particles =====
+    const canvas = document.getElementById('particles');
+    const ctx = canvas.getContext('2d');
+    let particles = [];
+    let w, h;
+
+    function resize() {
+      w = canvas.width = window.innerWidth;
+      h = canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    class Particle {
+      constructor() { this.reset(); }
+      reset() {
+        this.x = Math.random() * w;
+        this.y = Math.random() * h;
+        this.vx = (Math.random() - 0.5) * 0.4;
+        this.vy = (Math.random() - 0.5) * 0.4;
+        this.size = Math.random() * 1.8 + 0.4;
+        this.alpha = Math.random() * 0.5 + 0.1;
+        this.color = Math.random() > 0.6 ? '#00f5ff' : (Math.random() > 0.5 ? '#ff00e5' : '#b026ff');
+      }
+      update() {
+        this.x += this.vx;
+        this.y += this.vy;
+        if (this.x < 0 || this.x > w || this.y < 0 || this.y > h) this.reset();
+      }
+      draw() {
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fillStyle = this.color;
+        ctx.globalAlpha = this.alpha;
+        ctx.fill();
+      }
+    }
+
+    for (let i = 0; i < 70; i++) particles.push(new Particle());
+
+    function animate() {
+      ctx.clearRect(0, 0, w, h);
+      particles.forEach(p => { p.update(); p.draw(); });
+      // subtle lines
+      ctx.globalAlpha = 0.08;
+      for (let i = 0; i < particles.length; i++) {
+        for (let j = i + 1; j < particles.length; j++) {
+          const dx = particles[i].x - particles[j].x;
+          const dy = particles[i].y - particles[j].y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < 110) {
+            ctx.beginPath();
+            ctx.moveTo(particles[i].x, particles[i].y);
+            ctx.lineTo(particles[j].x, particles[j].y);
+            ctx.strokeStyle = '#00f5ff';
+            ctx.lineWidth = 0.5;
+            ctx.stroke();
+          }
+        }
+      }
+      ctx.globalAlpha = 1;
+      requestAnimationFrame(animate);
+    }
+    animate();
+
+    // ===== App logic =====
+    const input = document.getElementById('nik');
+    const resultEl = document.getElementById('result');
+    const btn = document.getElementById('btnParse');
+
+    input.addEventListener('input', (e) => {
+      e.target.value = e.target.value.replace(/\D/g, '').slice(0, 16);
+    });
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') doParse();
+    });
+
+    function fillExample() {
+      input.value = '3204110609970001';
+      input.focus();
+    }
+
+    async function doParse() {
+      const nik = input.value.trim();
+      if (nik.length !== 16) {
+        showError('NIK harus tepat 16 digit angka.');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.innerHTML = '<span class="loader"></span>PARSING...';
+      resultEl.classList.remove('visible');
+
+      try {
+        const res = await fetch(`/api/parse?nik=${encodeURIComponent(nik)}`);
+        const data = await res.json();
+
+        if (data.status === 'success') {
+          showSuccess(data);
+        } else {
+          showError(data.pesan || 'NIK tidak valid');
+        }
+      } catch (err) {
+        showError('Gagal menghubungi API. Coba lagi.');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = 'PARSE';
+      }
+    }
+
+    function showError(msg) {
+      resultEl.innerHTML = `
+        <div class="status-bar error">
+          <span class="status-dot"></span>
+          ${escapeHtml(msg)}
+        </div>`;
+      resultEl.classList.add('visible');
+    }
+
+    function showSuccess(data) {
+      const d = data.data;
+      const t = d.tambahan || {};
+      resultEl.innerHTML = `
+        <div class="status-bar success">
+          <span class="status-dot"></span>
+          ${escapeHtml(data.pesan)} • NIK VALID
+        </div>
+        <div class="grid">
+          <div class="field highlight">
+            <div class="label">NIK</div>
+            <div class="value">${escapeHtml(d.nik)}</div>
+          </div>
+          <div class="field">
+            <div class="label">Jenis Kelamin</div>
+            <div class="value">${escapeHtml(d.kelamin)}</div>
+          </div>
+          <div class="field">
+            <div class="label">Tanggal Lahir</div>
+            <div class="value">${escapeHtml(d.lahir)}</div>
+          </div>
+          <div class="field">
+            <div class="label">Provinsi</div>
+            <div class="value">${escapeHtml(d.provinsi || '-')}</div>
+          </div>
+          <div class="field">
+            <div class="label">Kabupaten / Kota</div>
+            <div class="value">${escapeHtml(d.kotakab || '-')}</div>
+          </div>
+          <div class="field">
+            <div class="label">Kecamatan</div>
+            <div class="value">${escapeHtml(d.kecamatan || '-')}</div>
+          </div>
+          <div class="field">
+            <div class="label">Kode Pos</div>
+            <div class="value">${escapeHtml(t.kodepos || '-')}</div>
+          </div>
+          <div class="field">
+            <div class="label">Usia</div>
+            <div class="value">${escapeHtml(t.usia || '-')}</div>
+          </div>
+          <div class="field">
+            <div class="label">Ultah Berikutnya</div>
+            <div class="value">${escapeHtml(t.ultah || '-')}</div>
+          </div>
+          <div class="field">
+            <div class="label">Zodiak</div>
+            <div class="value">${escapeHtml(t.zodiak || '-')}</div>
+          </div>
+          <div class="field">
+            <div class="label">Pasaran Jawa</div>
+            <div class="value">${escapeHtml(t.pasaran || '-')}</div>
+          </div>
+          <div class="field">
+            <div class="label">Uniq Code</div>
+            <div class="value">${escapeHtml(d.uniqcode || '-')}</div>
+          </div>
+        </div>`;
+      resultEl.classList.add('visible');
+    }
+
+    function escapeHtml(str) {
+      if (str == null) return '-';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    function copyCurl() {
+      const text = `curl -s "https://YOUR-DOMAIN.vercel.app/api/parse?nik=3204110609970001" | jq`;
+      navigator.clipboard.writeText(text).then(() => {
+        const btn = document.querySelector('.copy-btn');
+        btn.textContent = 'COPIED!';
+        setTimeout(() => btn.textContent = 'COPY', 1500);
+      });
+    }
+
+    // Auto-fill example on load for demo feel
+    // fillExample();
+  </script>
+</body>
+</html>

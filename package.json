@@ -1,0 +1,23 @@
+{
+  "name": "nik-parse-vercel",
+  "version": "2.0.0",
+  "description": "Parse & Validasi NIK KTP Indonesia — Ready for Vercel with futuristic UI & public API",
+  "main": "api/parse.js",
+  "scripts": {
+    "dev": "vercel dev",
+    "start": "vercel dev"
+  },
+  "keywords": [
+    "nik",
+    "ktp",
+    "nik-parse",
+    "indonesia",
+    "vercel",
+    "api"
+  ],
+  "author": "bachors + redesigned",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  }
+}
